@@ -1,0 +1,24 @@
+{
+    "name": "allekurier/wz-api-client",
+    "type" : "library",
+    "license" : "MIT",
+    "homepage" : "https://wygodnezwroty.pl",
+    "require": {
+        "php": ">=7.4.0",
+        "ext-json": "*",
+        "guzzlehttp/guzzle": "^7.4.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "AlleKurier\\WygodneZwroty\\Api\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AlleKurier\\WygodneZwroty\\ApiTests\\": "tests/"
+        }
+    }
+}
