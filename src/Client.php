@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace AlleKurier\WygodneZwroty\Api;
+namespace AlleKurier\ApiV2;
 
 use AlleKurier\ApiV2\Command\RequestInterface;
 use AlleKurier\ApiV2\Command\ResponseInterface;
@@ -23,7 +23,7 @@ use Psr\Http\Client\ClientExceptionInterface;
 
 class Client
 {
-    private const API_URL = 'https://api.allekurier.pl/v1';
+    private const API_URL = 'https://api.allekurier.pl';
 
     private Api $api;
 
