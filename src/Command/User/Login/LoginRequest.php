@@ -59,7 +59,10 @@ class LoginRequest extends AbstractRequest implements RequestInterface
      */
     public function getRequestData(): array
     {
-        return [];
+        return [
+            'email' => $this->email,
+            'password' => $this->password,
+        ];
     }
 
     /**

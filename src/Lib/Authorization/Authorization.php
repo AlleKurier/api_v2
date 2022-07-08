@@ -18,6 +18,6 @@ class Authorization implements AuthorizationInterface
      */
     public function getHttpHeader(string $authorizationToken): string
     {
-        return sprintf('Bearer %s', base64_encode($authorizationToken));
+        return sprintf('BEARER %s', $authorizationToken);
     }
 }
