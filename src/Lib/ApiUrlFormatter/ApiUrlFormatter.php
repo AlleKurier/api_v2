@@ -18,7 +18,7 @@ class ApiUrlFormatter implements ApiUrlFormatterInterface
     /**
      * {@inheritDoc}
      */
-    public function getFormattedUrl(string $apiUrl, string $authorizationCode, RequestInterface $request): string
+    public function getFormattedUrl(string $apiUrl, RequestInterface $request): string
     {
         $parameters = $request->getParameters();
 
@@ -27,7 +27,7 @@ class ApiUrlFormatter implements ApiUrlFormatterInterface
             $parametersString = '?' . $parametersString;
         }
 
-        $url = sprintf('%s/%s/%s/%s', $apiUrl, $authorizationCode, $request->getEndpoint(), $parametersString);
+        $url = sprintf('%s/%s/%s', $apiUrl, $request->getEndpoint(), $parametersString);
 
         return rtrim($url, '/');
     }

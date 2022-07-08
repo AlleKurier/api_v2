@@ -30,9 +30,9 @@ class Client
     /**
      * Konstruktor
      *
-     * @param Credentials $credentials
+     * @param Credentials|null $credentials
      */
-    public function __construct(Credentials $credentials)
+    public function __construct(?Credentials $credentials = null)
     {
         $httpClient = new \GuzzleHttp\Client();
         $apiUrlFormatter = new ApiUrlFormatter();
@@ -45,8 +45,8 @@ class Client
             $apiUrlFormatter,
             $authorization,
             $responseParser,
-            $credentials,
-            $this->getApiUrl()
+            $this->getApiUrl(),
+            $credentials
         );
     }
 

@@ -13,12 +13,12 @@
     },
     "autoload": {
         "psr-4": {
-            "AlleKurier\\WygodneZwroty\\Api\\": "src/"
+            "AlleKurier\\ApiV2\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "AlleKurier\\WygodneZwroty\\ApiTests\\": "tests/"
+            "AlleKurier\\ApiV2Tests\\": "tests/"
         }
     }
 }

@@ -39,7 +39,7 @@ class ResponseParser implements ResponseParserInterface
         if (!empty($responseData['failure'])) {
             return $this->errorsFactory->createFromResponse($responseData);
         } else {
-            return $request->getParsedResponse($responseHeaders, $responseData['data']);
+            return $request->getParsedResponse($responseHeaders, $responseData);
         }
     }
 }

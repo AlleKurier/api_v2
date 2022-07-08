@@ -12,6 +12,13 @@ namespace AlleKurier\ApiV2\Command;
 interface RequestInterface
 {
     /**
+     * Zwrócenie informacji o tym czy komenda API wymaga danych autoryzacyjnych
+     *
+     * @return bool
+     */
+    public function isCredentialsRequired(): bool;
+
+    /**
      * Pobranie metody HTTP dla komendy API
      *
      * @return string

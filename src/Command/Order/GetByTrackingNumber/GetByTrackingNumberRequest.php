@@ -9,12 +9,13 @@
 
 declare(strict_types=1);
 
-namespace AlleKurier\ApiV2\Command\GetOrderByTrackingNumber;
+namespace AlleKurier\ApiV2\Command\Order\GetByTrackingNumber;
 
+use AlleKurier\ApiV2\Command\AbstractRequest;
 use AlleKurier\ApiV2\Command\RequestInterface;
 use AlleKurier\ApiV2\Command\ResponseInterface;
 
-class GetOrderByTrackingNumberRequest implements RequestInterface
+class GetByTrackingNumberRequest extends AbstractRequest implements RequestInterface
 {
     private string $trackingNumber;
 
@@ -75,6 +76,6 @@ class GetOrderByTrackingNumberRequest implements RequestInterface
      */
     public function getParsedResponse(array $responseHeaders, array $responseData): ResponseInterface
     {
-        return new GetOrderByTrackingNumberResponse($responseData);
+        return new GetByTrackingNumberResponse($responseData);
     }
 }

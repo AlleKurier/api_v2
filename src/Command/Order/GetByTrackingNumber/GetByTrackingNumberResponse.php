@@ -9,13 +9,13 @@
 
 declare(strict_types=1);
 
-namespace AlleKurier\ApiV2\Command\GetOrderByTrackingNumber;
+namespace AlleKurier\ApiV2\Command\Order\GetByTrackingNumber;
 
 use AlleKurier\ApiV2\Command\AbstractResponse;
 use AlleKurier\ApiV2\Command\ResponseInterface;
 use AlleKurier\ApiV2\Model\Response\Order;
 
-class GetOrderByTrackingNumberResponse extends AbstractResponse implements ResponseInterface
+class GetByTrackingNumberResponse extends AbstractResponse implements ResponseInterface
 {
     private Order $order;
 

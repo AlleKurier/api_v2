@@ -86,11 +86,13 @@ Przykład:
 
 ### Komendy
 
+Informacje o wszystkich dostępnych komendach znajdują się pod adresem: https://api.allekurier.pl/api/doc
+
 #### Pobranie danych przesyłki
 
 ##### Zapytanie
 
-https://api.allekurier.pl/v1/KOD_KLIENTA/order/trackingnumber/NUMER_SLEDZENIA
+https://api.allekurier.pl/order/trackingnumber/NUMER_SLEDZENIA
 
 gdzie:
 
@@ -534,57 +536,6 @@ gdzie:
 * `KOD_KLIENTA`: Kod autoryzacyjny klienta.
 * `TOKEN_AUTORYZACYJNY`: Token autoryzacyjny.
 * `IDENTYFIKATOR_ZAMÓWIENIA`: Identyfikator zamówienia w formacie UUID.
-
-#### Pobranie etykiet przesyłki
-
-##### Zapytanie
-
-https://api.allekurier.pl/v1/KOD_KLIENTA/order/IDENTYFIKATOR_ZAMÓWIENIA/labels
-
-gdzie:
-
-* `KOD_KLIENTA`: Kod autoryzacyjny klienta.
-* `IDENTYFIKATOR_ZAMÓWIENIA`: Identyfikator zamówienia w formacie UUID.
-
-##### Odpowiedź
-
-Przykład:
-
-```json
-{
-    "failure":false,
-    "successful":true,
-    "data":{
-        "labelsContent":"JVBERi0xLjQKJeLjz9MKMiAwIG9iago8PC9GaWx0ZXIvRmxhdGVEZWNvZGUvT(...)"
-    }
-}
-```
-
-gdzie:
-* `labelsContent`: plik zakodowany w base64
-
-##### Przykłady
-
-###### PHP
-
-```php
-$request = new AlleKurier\ApiV2\Command\GetOrderLabels\GetOrderLabelsRequest(
-    'IDENTYFIKATOR_ZAMÓWIENIA'
-);
-
-/** @var \AlleKurier\ApiV2\Command\GetOrderLabels\GetOrderLabelsResponse|\AlleKurier\ApiV2\Lib\Errors\ErrorsInterface $response */
-$response = $api->call($request);
-
-if ($response->hasErrors()) {
-    foreach ($response->getErrors() as $error) {
-        echo $error->getMessage() . PHP_EOL;
-        echo $error->getCode() . PHP_EOL;
-        echo $error->getLevel() . PHP_EOL;
-    }
-} else {
-    file_put_contents('labels.pdf', base64_decode($response->getLabelsContent()));
-}
-```
 
 ###### cURL
 

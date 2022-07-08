@@ -14,12 +14,11 @@ use AlleKurier\ApiV2\Command\RequestInterface;
 interface ApiUrlFormatterInterface
 {
     /**
-     * Pobranie sformatowanego adresu API w oparciu o adres API, kod autoryzacyjny oraz dane zapytania
+     * Pobranie sformatowanego adresu API w oparciu o adres API oraz dane zapytania
      *
      * @param string $apiUrl
-     * @param string $authorizationCode
      * @param RequestInterface $request
      * @return string
      */
-    public function getFormattedUrl(string $apiUrl, string $authorizationCode, RequestInterface $request): string;
+    public function getFormattedUrl(string $apiUrl, RequestInterface $request): string;
 }

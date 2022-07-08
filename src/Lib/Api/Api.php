@@ -33,7 +33,7 @@ class Api
 
     private ResponseParserInterface $responseParser;
 
-    private Credentials $credentials;
+    private ?Credentials $credentials;
 
     private string $apiUrl;
 
@@ -44,24 +44,24 @@ class Api
      * @param ApiUrlFormatterInterface $apiUrlFormatter
      * @param AuthorizationInterface $authorization
      * @param ResponseParserInterface $responseParser
-     * @param Credentials $credentials
      * @param string $apiUrl
+     * @param Credentials|null $credentials
      */
     public function __construct(
         ClientInterface          $client,
         ApiUrlFormatterInterface $apiUrlFormatter,
         AuthorizationInterface   $authorization,
         ResponseParserInterface  $responseParser,
-        Credentials              $credentials,
-        string                   $apiUrl
+        string                   $apiUrl,
+        ?Credentials             $credentials
     )
     {
         $this->client = $client;
         $this->apiUrlFormatter = $apiUrlFormatter;
         $this->authorization = $authorization;
         $this->responseParser = $responseParser;
-        $this->credentials = $credentials;
         $this->apiUrl = $apiUrl;
+        $this->credentials = $credentials;
     }
 
     /**
@@ -74,29 +74,7 @@ class Api
      */
     public function call(RequestInterface $request): ResponseInterface
     {
-        $url = $this->apiUrlFormatter->getFormattedUrl(
-            $this->apiUrl,
-            $this->credentials->getCode(),
-            $request
-        );
-
-        $requestData = $request->getRequestData();
-        $requestDataString = json_encode($requestData);
-
-        $authorizationHeader = $this->authorization->getHttpHeader($this->credentials->getToken());
-
-        $httpMethod = $request->getHttpMethod();
-
-        $httpRequest = new Request(
-            $httpMethod,
-            $url,
-            [
-                'Content-Type' => 'application/json',
-                self::HTTP_HEADER_AUTHORIZATION => $authorizationHeader,
-            ],
-            $requestDataString
-        );
-
+        $httpRequest = $this->buildHttpRequest($request);
         $httpResponse = $this->client->sendRequest($httpRequest);
 
         $responseHeaders = $httpResponse->getHeaders();
@@ -112,5 +90,63 @@ class Api
             $responseHeaders,
             $responseData
         );
+    }
+
+    /**
+     * Zbudowanie zapytania HTTP
+     *
+     * @param RequestInterface $request
+     * @return Request
+     * @throws ApiException
+     */
+    private function buildHttpRequest(RequestInterface $request): Request
+    {
+        if ($request->isCredentialsRequired()) {
+            if (is_null($this->credentials)) {
+                throw new ApiException('Credential are required.');
+            }
+        } else {
+            if (!is_null($this->credentials)) {
+                throw new ApiException('Credential should not be sent because they will not be used.');
+            }
+        }
+
+        $url = $this->apiUrlFormatter->getFormattedUrl(
+            $this->apiUrl,
+            $request
+        );
+
+        $requestData = $request->getRequestData();
+        $requestDataString = json_encode($requestData);
+
+        $httpMethod = $request->getHttpMethod();
+
+        $httpHeaders = $this->buildHttpRequestHeaders();
+
+        return new Request(
+            $httpMethod,
+            $url,
+            $httpHeaders,
+            $requestDataString
+        );
+    }
+
+    /**
+     * Zbudowanie tablicy z nagłówkami do zapytania HTTP
+     *
+     * @return string[]
+     */
+    private function buildHttpRequestHeaders(): array
+    {
+        $httpHeaders = [
+            'Content-Type' => 'application/json',
+        ];
+
+        if (!is_null($this->credentials)) {
+            $authorizationHeader = $this->authorization->getHttpHeader($this->credentials->getToken());
+            $httpHeaders[self::HTTP_HEADER_AUTHORIZATION] = $authorizationHeader;
+        }
+
+        return $httpHeaders;
     }
 }

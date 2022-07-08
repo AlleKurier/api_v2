@@ -9,12 +9,13 @@
 
 declare(strict_types=1);
 
-namespace AlleKurier\ApiV2\Command\GetSentOrders;
+namespace AlleKurier\ApiV2\Command\Order\GetSentOrders;
 
+use AlleKurier\ApiV2\Command\AbstractRequest;
 use AlleKurier\ApiV2\Command\RequestInterface;
 use AlleKurier\ApiV2\Command\ResponseInterface;
 
-class GetSentOrdersRequest implements RequestInterface
+class GetSentOrdersRequest extends AbstractRequest implements RequestInterface
 {
     /**
      * Data w formacie Y-m-d wg, której pobierana jest lista przesyłek. Gdy null- dzisiejsza data.

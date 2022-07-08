@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace AlleKurier\ApiV2\Command\GetSentOrders;
+namespace AlleKurier\ApiV2\Command\Order\GetSentOrders;
 
 use AlleKurier\ApiV2\Command\AbstractResponse;
 use AlleKurier\ApiV2\Command\ResponseInterface;
@@ -26,7 +26,7 @@ class GetSentOrdersResponse extends AbstractResponse implements ResponseInterfac
     {
         $orders = [];
 
-        foreach ($responseData['orders'] as $order) {
+        foreach ($responseData['items'] as $order) {
             $orders[] = Order::createFromArray($order);
         }
 
