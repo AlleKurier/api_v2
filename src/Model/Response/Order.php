@@ -29,15 +29,17 @@ class Order implements ResponseModelInterface
      * @param string $hid
      * @param User $user
      * @param Identity $sender
+     * @param string $status
      * @param AdditionalFields $additionalFields
      */
     private function __construct(
-        string $hid,
-        User $user,
-        Identity $sender,
-        string $status,
+        string           $hid,
+        User             $user,
+        Identity         $sender,
+        string           $status,
         AdditionalFields $additionalFields
-    ) {
+    )
+    {
         $this->hid = $hid;
         $this->user = $user;
         $this->sender = $sender;

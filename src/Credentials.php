@@ -20,7 +20,7 @@ class Credentials
     /**
      * Konstruktor
      *
-     * @param string $code
+     * @param string $token
      * @param string|null $mailBoxCode
      */
     public function __construct(string $token, ?string $mailBoxCode = null)

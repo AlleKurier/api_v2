@@ -1,6 +1,6 @@
 <?php
 /*
- * GetOrderByTrackingNumberResponse.php
+ * GetByTrackingNumberResponse.php
  *
  * @author AlleKurier
  * @license https://opensource.org/licenses/MIT The MIT License
