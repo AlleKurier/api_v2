@@ -13,14 +13,12 @@ use AlleKurier\ApiV2\Command\RequestInterface;
 use AlleKurier\ApiV2\Command\ResponseInterface;
 use AlleKurier\ApiV2\Credentials;
 use AlleKurier\ApiV2\Lib\Api\Api;
-use AlleKurier\ApiV2\Lib\Api\ApiException;
 use AlleKurier\ApiV2\Lib\ApiUrlFormatter\ApiUrlFormatterInterface;
 use AlleKurier\ApiV2\Lib\Authorization\AuthorizationInterface;
 use AlleKurier\ApiV2\Lib\ResponseParser\ResponseParserInterface;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\StreamInterface;
 
@@ -93,39 +91,72 @@ class ApiTest extends TestCase
             $this->apiUrlFormatter,
             $this->authorization,
             $this->responseParser,
-            $this->credentials,
-            self::TEST_API_URL
+            self::TEST_API_URL,
+            $this->credentials
         );
     }
 
-    /**
-     * @throws ApiException
-     * @throws ClientExceptionInterface
-     */
-    public function test_call(): void
+    public function test_call_for_required_credentials_without_mailbox_code(): void
     {
-        $credentialsCode = 'testcode';
+        $this->callForTest(true, null);
+    }
+
+    public function test_call_for_required_credentials_with_mailbox_code(): void
+    {
+        $this->callForTest(true, 'mailboxcode');
+    }
+
+    public function test_call_for_not_required_credentials(): void
+    {
+        $this->callForTest(false, null);
+    }
+
+    private function callForTest(bool $isCredentialsRequired, ?string $mailBoxCode): void
+    {
         $credentialsToken = 'testtoken';
         $requestData = [];
-        $httpAuthorizationHeader = 'Basic ' . base64_encode($credentialsToken);
+        $httpAuthorizationHeader = 'BEARER ' . $credentialsToken;
         $httpMethod = 'GET';
 
-        $formattedUrl = self::TEST_API_URL . '/testcode/order/trackingnumber/12345678';
+        $formattedUrl = self::TEST_API_URL . '/order/trackingnumber/12345678';
 
         $responseHeaders = [];
         $responseBody = '{"errors":[],"mainError":{},"failure":false,"successful":true}';
 
-        $this->credentials
-            ->method('getCode')
-            ->willReturn($credentialsCode);
+        if (!$isCredentialsRequired) {
+            $this->api = new Api(
+                $this->client,
+                $this->apiUrlFormatter,
+                $this->authorization,
+                $this->responseParser,
+                self::TEST_API_URL,
+                null
+            );
+        }
 
-        $this->credentials
-            ->method('getToken')
-            ->willReturn($credentialsToken);
+        if ($isCredentialsRequired) {
+            $this->credentials
+                ->method('getToken')
+                ->willReturn($credentialsToken);
+
+            $this->credentials
+                ->method('isMailBoxCode')
+                ->willReturn(!is_null($mailBoxCode));
+
+            if (!is_null($mailBoxCode)) {
+                $this->credentials
+                    ->method('getMailBoxCode')
+                    ->willReturn($mailBoxCode);
+            }
+        }
+
+        $this->request
+            ->method('isCredentialsRequired')
+            ->willReturn($isCredentialsRequired);
 
         $this->apiUrlFormatter
             ->method('getFormattedUrl')
-            ->with(self::TEST_API_URL, $credentialsCode, $this->request)
+            ->with(self::TEST_API_URL, $this->request)
             ->willReturn($formattedUrl);
 
         $this->request

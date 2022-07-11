@@ -40,6 +40,16 @@ class Credentials
     }
 
     /**
+     * Sprawdzenie czy istnieje kod skrzynki e-mail
+     *
+     * @return bool
+     */
+    public function isMailBoxCode(): bool
+    {
+        return !is_null($this->mailBoxCode);
+    }
+
+    /**
      * Pobranie kodu skrzynki e-mail
      *
      * @return string|null

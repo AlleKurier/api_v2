@@ -25,6 +25,8 @@ class Api
 {
     private const HTTP_HEADER_AUTHORIZATION = 'Authorization';
 
+    private const HTTP_HEADER_MAILBOX_CODE = 'MailBox-Code';
+
     private ClientInterface $client;
 
     private ApiUrlFormatterInterface $apiUrlFormatter;
@@ -145,6 +147,10 @@ class Api
         if (!is_null($this->credentials)) {
             $authorizationHeader = $this->authorization->getHttpHeader($this->credentials->getToken());
             $httpHeaders[self::HTTP_HEADER_AUTHORIZATION] = $authorizationHeader;
+
+            if ($this->credentials->isMailBoxCode()) {
+                $httpHeaders[self::HTTP_HEADER_MAILBOX_CODE] = $this->credentials->getMailBoxCode();
+            }
         }
 
         return $httpHeaders;
