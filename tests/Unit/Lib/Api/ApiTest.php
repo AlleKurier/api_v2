@@ -13,12 +13,14 @@ use AlleKurier\ApiV2\Command\RequestInterface;
 use AlleKurier\ApiV2\Command\ResponseInterface;
 use AlleKurier\ApiV2\Credentials;
 use AlleKurier\ApiV2\Lib\Api\Api;
+use AlleKurier\ApiV2\Lib\Api\ApiException;
 use AlleKurier\ApiV2\Lib\ApiUrlFormatter\ApiUrlFormatterInterface;
 use AlleKurier\ApiV2\Lib\Authorization\AuthorizationInterface;
 use AlleKurier\ApiV2\Lib\ResponseParser\ResponseParserInterface;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\StreamInterface;
 
@@ -96,21 +98,37 @@ class ApiTest extends TestCase
         );
     }
 
+    /**
+     * @throws ApiException
+     * @throws ClientExceptionInterface
+     */
     public function test_call_for_required_credentials_without_mailbox_code(): void
     {
         $this->callForTest(true, null);
     }
 
+    /**
+     * @throws ApiException
+     * @throws ClientExceptionInterface
+     */
     public function test_call_for_required_credentials_with_mailbox_code(): void
     {
         $this->callForTest(true, 'mailboxcode');
     }
 
+    /**
+     * @throws ApiException
+     * @throws ClientExceptionInterface
+     */
     public function test_call_for_not_required_credentials(): void
     {
         $this->callForTest(false, null);
     }
 
+    /**
+     * @throws ApiException
+     * @throws ClientExceptionInterface
+     */
     private function callForTest(bool $isCredentialsRequired, ?string $mailBoxCode): void
     {
         $credentialsToken = 'testtoken';

@@ -28,7 +28,7 @@ class AuthorizationTest extends TestCase
 
         $authorization = $this->authorization->getHttpHeader($token);
 
-        $expectedOutput = 'Basic ' . base64_encode($token);
+        $expectedOutput = 'BEARER ' . $token;
 
         $this->assertEquals($expectedOutput, $authorization);
     }

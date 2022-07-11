@@ -61,16 +61,14 @@ class ResponseParserTest extends TestCase
         $responseData = [
             'success' => true,
             'failure' => false,
-            'data' => [
-                'a' => 1,
-                'b' => 'c',
-            ],
+            'a' => 1,
+            'b' => 'c',
         ];
 
         $this->request
             ->expects(self::once())
             ->method('getParsedResponse')
-            ->with($responseHeaders, $responseData['data'])
+            ->with($responseHeaders, $responseData)
             ->willReturn($this->response);
 
         $parsedResponse = $this->responseParser->getParsedResponse(
@@ -91,10 +89,8 @@ class ResponseParserTest extends TestCase
         $responseData = [
             'success' => false,
             'failure' => true,
-            'data' => [
-                'a' => 1,
-                'b' => 'c',
-            ],
+            'a' => 1,
+            'b' => 'c',
         ];
 
         $this->errorsFactory

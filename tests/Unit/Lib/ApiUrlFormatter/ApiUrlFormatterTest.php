@@ -37,7 +37,6 @@ class ApiUrlFormatterTest extends TestCase
      * @dataProvider getFormattedUrlProvider
      */
     public function test_get_formatted_url(
-        string $authorizationCode,
         string $endpoint,
         array  $parameters,
         string $expectedFormattedUrl
@@ -53,7 +52,6 @@ class ApiUrlFormatterTest extends TestCase
 
         $formattedUrl = $this->apiUrlFormatter->getFormattedUrl(
             self::TEST_API_URL,
-            $authorizationCode,
             $this->request
         );
 
@@ -64,19 +62,17 @@ class ApiUrlFormatterTest extends TestCase
     {
         return [
             [
-                'code',
                 'order/trackingnumber/12345678',
                 [],
-                self::TEST_API_URL . '/code/order/trackingnumber/12345678',
+                self::TEST_API_URL . '/order/trackingnumber/12345678',
             ],
             [
-                'code',
                 'order/trackingnumber/12345678',
                 [
                     'a' => 1,
                     'b' => 'c',
                 ],
-                self::TEST_API_URL . '/code/order/trackingnumber/12345678/?a=1&b=c',
+                self::TEST_API_URL . '/order/trackingnumber/12345678/?a=1&b=c',
             ],
         ];
     }
