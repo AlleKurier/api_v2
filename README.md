@@ -23,23 +23,100 @@ composer require allekurier/api_v2
 
 ### Autoryzacja
 
-W celu nawiązania połączenia z API należy podać dane autoryzacyjne.
+#### Wygenerowanie tokenu
+
+W celu korzystania z komend API należy najpierw się zalogować. Logowanie powoduje wygenerowanie tokenu, który następnie jest używany przy wywoływaniu każdej innej komendy.
+
+Token jest ważny 2 tygodnie. Po tym czasie należy ponownie się zalogować.
+
+##### Zapytanie
+
+https://api.allekurier.pl/user/login
+
+```json
+{
+    "email": "EMAIL_KLIENTA",
+    "password": "HASLO_KLIENTA"
+}
+```
+
+gdzie:
+
+* `EMAIL_KLIENTA`: E-mail klienta, na który zarejestrowane jest jego konto.
+* `HASLO_KLIENTA`: Hasło przypisane do konta klienta.
+
+##### Odpowiedź
+
+W odpowiedzi zwracanych jest parę pól z danymi, z których najważniejszymi są następujące:
+
+* `token`: Token autoryzacyjny.
+
+Przykład:
+
+```json
+{
+    "failure": false,
+    "successful": true,
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2NTc1MzkwNzYsImV4cCI6MTY1ODc0ODY3Niwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlkIjoxLCJoaWQiOiI1NmNlNmRhMC0yNDlkLTQyMTAtOGZjOC0zZDgxN2M2NTQ2ZDQiLCJ1c2VybmFtZSI6ImRvbWluaWsua29jdWpAYWxsZWt1cmllci5wbCJ9.MJxT7CYjPcNT2NYt22MQxXFZ1kKbUwacoXksBxwf-mjfJaf2Ukh2Pk98qwpDcte6jW48pQyozXQ8seiJDrGYHeBpUrX2tBLt7yVqVXAFJFBW-J6qTyIGZDgT-sUxdcsqqSZhofCuFSb_xbbdc_yFzHDmNzkXTylTM3p9tKGnSoqFFMN6n-BPhaW3vf6_Diht6BWtdDU51k8uUqsn-mjAgEB9Begzz5E2fO7NthroXHVC5EqFGIs2nfo3Oi7cqHWsIODbreFPd2lg4PaDiwi9GeCae8Ka7X1My0QLyAX_CDZ5uyTLWp8p0RgEtthELSpmCgXsZ-J785NUj40ROfaLZQ"
+} 
+```
+
+##### PHP
 
 ```php
-$credentials = new AlleKurier\ApiV2\Credentials('KOD_KLIENTA', 'TOKEN_AUTORYZACYJNY');
+$api = new \AlleKurier\ApiV2\Client();
+$request = new \AlleKurier\ApiV2\Command\User\Login\LoginRequest(
+    'EMAIL_KLIENTA',
+    'HASLO_KLIENTA'
+);
+
+/** @var \AlleKurier\ApiV2\Command\User\Login\LoginResponse|\AlleKurier\ApiV2\Lib\Errors\ErrorsInterface $response */
+$response = $api->call($request);
+
+if ($response->hasErrors()) {
+    foreach ($response->getErrors() as $error) {
+        echo $error->getMessage() . PHP_EOL;
+        echo $error->getCode() . PHP_EOL;
+        echo $error->getLevel() . PHP_EOL;
+    }
+} else {
+    $loginData = $response->getLoginData();
+}
+```
+
+gdzie:
+
+* `EMAIL_KLIENTA`: E-mail klienta, na który zarejestrowane jest jego konto.
+* `HASLO_KLIENTA`: Hasło przypisane do konta klienta.
+
+Jeżeli nie zostały zwrócone błędy, to `$loginData` zawiera dane zwrócone w odpowiedzi. Obecnie jest to token autoryzacyjny, który można pobrać przy pomocy metody `getToken()`, tj.:
+
+```php
+$token = $loginData->getToken();
+```
+
+#### Używanie tokenu
+
+W celu nawiązania połączenia z API należy podać token, który został wygenerowany poprzez wywołanie komendy do logowania.
+
+Jeżeli klient jest właścicielem sklepu korzystającego z usługi Wygodnych Zwrotów, to może podać również kod sklepu, aby dla komend API, które z niego korzystają, uzyskać wyniki, które nie dotyczą konta klienta, ale wybranego sklepu.
+
+Dane autoryzacyjne muszą znajdować się w nagłówku HTTP w postaci:
+
+* `Authorization`: Musi być typu "BEARER" i zawierać token.
+* `MailBox-Code`: Jeżeli istnieje, to musi zawierać kod sklepu, którego dotyczy wywołanie komendy.
+
+W niniejszej bibliotece można te dane uzyskać wywołując następujący kod:
+
+```php
+$credentials = new AlleKurier\ApiV2\Credentials('TOKEN_AUTORYZACYJNY', 'KOD_SKLEPU_KLIENTA');
 $api = new AlleKurier\ApiV2\Client($credentials);
 ```
 
 gdzie:
 
-* `KOD_KLIENTA`: Kod autoryzacyjny klienta.
-* `TOKEN_AUTORYZACYJNY`: Token autoryzacyjny.
-
-Jeżeli zamiast PHP używany ma być inny język należy wysyłać w nagłówku HTTP element `Authorization` typu `Basic` przekazując token autoryzacyjny w formacie BASE64, np.:
-
-```
-Authorization: Basic MTIzNA==
-```
+* `TOKEN_AUTORYZACYJNY`: Token uzyskany po zalogowaniu przez klienta.
+* `KOD_SKLEPU_KLIENTA`: Kod sklepu, dla którego ma zostać wywołana komenda API.
 
 ### Zwracane dane
 
@@ -49,8 +126,6 @@ Zwracane dane są zawsze w formacie JSON. W celu sprawdzenia czy nie wystąpił 
 * `successful`: Jest ustawiony na `true`, gdy błąd nie wystąpił.
 
 Oba elementy są zawsze zwracane w każdej odpowiedzi z API.
-
-Jeżeli nie wystąpił błąd, wszystkie dane zwracane są w elemencie o kluczu `data`.
 
 W przypadku wystąpienia błędu zwracane są następujące elementy:
 
@@ -90,113 +165,14 @@ Informacje o wszystkich dostępnych komendach znajdują się pod adresem: https:
 
 #### Pobranie danych przesyłki
 
-##### Zapytanie
-
-https://api.allekurier.pl/order/trackingnumber/NUMER_SLEDZENIA
-
-gdzie:
-
-* `KOD_KLIENTA`: Kod autoryzacyjny klienta.
-* `NUMER_SLEDZENIA`: Numer śledzenia przesyłki lub numer, który został zeskanowany na liście przewozowym.
-
-##### Odpowiedź
-
-W kluczu `data` znajdują się następujące elementy:
-
-<span id="order-details"></span>
-* `order`: Zwrócone dane dla znalezionej przesyłki.
-    * `hid`: Identyfikator przesyłki.
-    * `user`: Dane klienta, do którego należy przesyłka.
-      * `email`: Adres e-mail klienta.
-    * `status`: Status zamówienia.
-    * `sender`: Dane nadawcy przesyłki.
-      * `name`: Imię i nazwisko nadawcy. W przypadku braku danych zwracana jest wartość NULL.
-      * `company`: Nazwa firmy nadawcy. W przypadku braku danych zwracana jest wartość NULL.
-      * `address`: Adres nadawcy (ulica, budynek i numer lokalu). W przypadku braku danych zwracana jest wartość NULL.
-      * `postal_code`: Kod pocztowy nadawcy. W przypadku braku danych zwracana jest wartość NULL.
-      * `city`: Miejscowość nadawcy. W przypadku braku danych zwracana jest wartość NULL.
-      * `country`: Dane kraju nadawcy.
-        * `code`: Kod kraju nadawcy.
-        * `name`: Nazwa kraju nadawcy.
-      * `state`: Stan do adresu nadawcy (tylko dla krajów, które używają nazw stanów). W przypadku braku danych zwracana jest wartość NULL.
-      * `phone`: Numer telefonu do nadawcy. W przypadku braku danych zwracana jest wartość NULL.
-      * `email`: Adres e-mail nadawcy. W przypadku braku danych zwracana jest wartość NULL.
-      * `access_point`: Dane punktu, z którego nadano przesyłkę. W przypadku braku danych zwracana jest wartość NULL.
-        * `code`: Kod punktu.
-        * `name`: Nazwa punktu. W przypadku braku danych zwracana jest wartość NULL.
-        * `address`: Adres punktu (ulica, budynek i numer lokalu). W przypadku braku danych zwracana jest wartość NULL.
-        * `postal_code`: Kod pocztowy punktu. W przypadku braku danych zwracana jest wartość NULL.
-        * `city`: Miejscowość punktu. W przypadku braku danych zwracana jest wartość NULL.
-        * `description`: Opis punktu. W przypadku braku danych zwracana jest wartość NULL.
-        * `open_hours`: Godziny otwarcia punktu. W przypadku braku danych zwracana jest wartość NULL.
-    * `additional_fields`: Dodatkowe pola informacyjne podane przez klienta podczas zlecania zwrotu - format JSON. W danych znajduje się tablica obiektów, z których każdy zawiera następujące elementy:
-        * `name`: Nazwa dodatkowego pola - w danych na pewno znajduje się pole o nazwie `orderNumber`, które zawiera numer zamówienia, którego dotyczy zwrot.
-        * `title`: Tytuł dodatkowego pola, który pojawiał się klientowi podczas składania zlecenia na zwrot.
-        * `value`: Wartość dodatkowego pola. Zawiera m.in. pole "orderNumber" z numerem zamówienia, którego dotyczy przesyłka. W przypadku braku danych zwracana jest wartość NULL.
-
-Przykład:
-
-```json
-{
-    "failure":false,
-    "successful":true,
-    "data":{
-        "order":{
-            "hid":"069439d9-78b5-4992-b2e0-3664491eeac9",
-            "user":{
-                "email":"test@allekurier.pl"
-            },
-            "status":"sent",
-            "sender":{
-                "name":"name",
-                "company":"company",
-                "address":"address",
-                "postal_code":"32-020",
-                "city":"Wieliczka",
-                "country":{
-                    "code":"PL",
-                    "name":"Polska"
-                },
-                "state":null,
-                "phone":"123123123",
-                "email":"test@allekurier.pl",
-                "access_point":{
-                    "code":"BAN01A",
-                    "name":"name",
-                    "address":"address",
-                    "postal_code":"39-200",
-                    "city":"City",
-                    "description":"description",
-                    "open_hours":""
-                }
-            },
-            "additional_fields":[
-                {
-                    "name":"orderNumber",
-                    "title":"Numer zam\u00f3wienia",
-                    "value":"12345678"
-                },
-                {
-                    "name":"returnCase",
-                    "title":"Pow\u00f3d zwrotu",
-                    "value":"Inny pow\u00f3d"
-                }
-            ]
-        }
-    }
-}
-```
-
-##### Przykłady
-
-###### PHP
+##### PHP
 
 ```php
 $request = new AlleKurier\ApiV2\Command\GetOrderByTrackingNumber\GetOrderByTrackingNumberRequest(
     'NUMER_SLEDZENIA'
 );
 
-/** @var \AlleKurier\ApiV2\Command\GetOrderByTrackingNumber\GetOrderByTrackingNumberResponse|\AlleKurier\ApiV2\Lib\Errors\ErrorsInterface $response */
+/** @var \AlleKurier\ApiV2\Command\Order\GetByTrackingNumber\GetByTrackingNumberResponse|\AlleKurier\ApiV2\Lib\Errors\ErrorsInterface $response */
 $response = $api->call($request);
 
 if ($response->hasErrors()) {
@@ -206,9 +182,10 @@ if ($response->hasErrors()) {
         echo $error->getLevel() . PHP_EOL;
     }
 } else {
-    echo $response->getOrder()->getNumber() . PHP_EOL;
+    if (!is_null($response->getOrder()->getOrderReturn())) {
+        echo $response->getOrder()->getOrderReturn()->getNumber() . PHP_EOL;
+    }
     echo $response->getOrder()->getHid() . PHP_EOL;
-    echo $response->getOrder()->getStatus() . PHP_EOL;
     echo $response->getOrder()->getUser()->getEmail() . PHP_EOL;
     echo $response->getOrder()->getSender()->getName() . PHP_EOL;
     echo $response->getOrder()->getSender()->getCompany() . PHP_EOL;
@@ -229,12 +206,14 @@ if ($response->hasErrors()) {
         echo $response->getOrder()->getSender()->getAccessPoint()->getDescription() . PHP_EOL;
         echo $response->getOrder()->getSender()->getAccessPoint()->getOpenHours() . PHP_EOL;
     }
-    foreach ($response->getOrder()->getAdditionalFields()->getAll() as $additionalField) {
-        echo
-            '"' . $additionalField->getName() . '";' .
-            '"' . $additionalField->getTitle() . '";' .
-            '"' . $additionalField->getValue() . '";' .
-            PHP_EOL;
+    if (!is_null($response->getOrder()->getOrderReturn())) {
+        foreach ($response->getOrder()->getOrderReturn()->getAdditionalFields()->getAll() as $additionalField) {
+            echo
+                '"' . $additionalField->getName() . '";' .
+                '"' . $additionalField->getTitle() . '";' .
+                '"' . $additionalField->getValue() . '";' .
+                PHP_EOL;
+        }
     }
 }
 ```
@@ -243,147 +222,32 @@ gdzie:
 
 * `NUMER_SLEDZENIA`: Numer śledzenia przesyłki lub numer, który został zeskanowany na liście przewozowym.
 
-###### cURL
+##### cURL
 
 ```bash
 curl -X GET \
-  https://api.allekurier.pl/v1/KOD_KLIENTA/order/trackingnumber/NUMER_SLEDZENIA \
+  https://api.allekurier.pl/order/trackingnumber/NUMER_SLEDZENIA \
   -H 'accept: application/json' \
   -H 'cache-control: no-cache' \
   -H 'content-type: application/json' \
-  -H 'authorization: TOKEN_AUTORYZACYJNY'
+  -H 'authorization: BEARER TOKEN_AUTORYZACYJNY'
 ```
 
 gdzie:
 
-* `KOD_KLIENTA`: Kod autoryzacyjny klienta.
 * `TOKEN_AUTORYZACYJNY`: Token autoryzacyjny.
 * `NUMER_SLEDZENIA`: Numer śledzenia przesyłki lub numer, który został zeskanowany na liście przewozowym.
 
 #### Pobranie przesyłek wysłanych w danym dniu
 
-##### Zapytanie
-
-https://api.allekurier.pl/v1/KOD_KLIENTA/order/sent?date=DATA
-
-gdzie:
-
-* `KOD_KLIENTA`: Kod autoryzacyjny klienta.
-* `DATA`: Data w formacie Y-m-d wg, której pobierana jest lista przesyłek. Gdy null- dzisiejsza data.
-
-##### Odpowiedź
-
-W kluczu `data` znajdują się następujące elementy:
-
-* `orders`: Zwrócone przesyłki.
-  * `order`: Szczegóły przesyłki [zobacz](#order-details)
-
-Przykład:
-
-```json
-{
-    "failure":false,
-    "successful":true,
-    "data":{
-        "orders":[
-            {
-                "hid":"069439d9-78b5-4992-b2e0-3664491eeac9",
-                "user":{
-                    "email":"test@allekurier.pl"
-                },
-                "status":"sent",
-                "sender":{
-                    "name":"name",
-                    "company":"company",
-                    "address":"address",
-                    "postal_code":"32-020",
-                    "city":"Wieliczka",
-                    "country":{
-                        "code":"PL",
-                        "name":"Polska"
-                    },
-                    "state":null,
-                    "phone":"123123123",
-                    "email":"test@allekurier.pl",
-                    "access_point":{
-                        "code":"BAN01A",
-                        "name":"name",
-                        "address":"address",
-                        "postal_code":"39-200",
-                        "city":"City",
-                        "description":"description",
-                        "open_hours":""
-                    }
-                },
-                "additional_fields":[
-                    {
-                        "name":"orderNumber",
-                        "title":"Numer zam\u00f3wienia",
-                        "value":"12345678"
-                    },
-                    {
-                        "name":"returnCase",
-                        "title":"Pow\u00f3d zwrotu",
-                        "value":"Inny pow\u00f3d"
-                    }
-                ]
-            },
-            {
-                "hid":"121891fe-f7eb-4b03-896f-3a94cae165ba",
-                "user":{
-                    "email":"test@allekurier.pl"
-                },
-                "sender":{
-                    "name":"name",
-                    "company":"company 2",
-                    "address":"address",
-                    "postal_code":"32-020",
-                    "city":"Wieliczka",
-                    "country":{
-                        "code":"PL",
-                        "name":"Polska"
-                    },
-                    "state":null,
-                    "phone":"123123123",
-                    "email":"test@allekurier.pl",
-                    "access_point":{
-                        "code":"BAN01A",
-                        "name":"name",
-                        "address":"address",
-                        "postal_code":"39-200",
-                        "city":"City",
-                        "description":"description",
-                        "open_hours":""
-                    }
-                },
-                "additional_fields":[
-                    {
-                        "name":"orderNumber",
-                        "title":"Numer zam\u00f3wienia",
-                        "value":"123456789"
-                    },
-                    {
-                        "name":"returnCase",
-                        "title":"Pow\u00f3d zwrotu",
-                        "value":"Inny pow\u00f3d"
-                    }
-                ]
-            }
-        ]
-    }
-}
-```
-
-##### Przykłady
-
-###### PHP
+##### PHP
 
 ```php
 $request = new AlleKurier\ApiV2\Command\GetSentOrders\GetSentOrdersRequest(
     'DATA'
 );
 
-/** @var \AlleKurier\ApiV2\Command\GetSentOrders\GetSentOrdersResponse|\AlleKurier\ApiV2\Lib\Errors\ErrorsInterface $response */
+/** @var \AlleKurier\ApiV2\Command\Order\GetSentOrders\GetSentOrdersResponse|\AlleKurier\ApiV2\Lib\Errors\ErrorsInterface $response */
 $response = $api->call($request);
 
 if ($response->hasErrors()) {
@@ -394,7 +258,9 @@ if ($response->hasErrors()) {
     }
 } else {
     foreach ($response->getOrders() as $order) {
-        echo $order->getNumber() . PHP_EOL;
+        if (!is_null($order->getOrderReturn())) {
+            echo $order->getOrderReturn()->getNumber() . PHP_EOL;
+        }
         echo $order->getHid() . PHP_EOL;
         echo $order->getStatus() . PHP_EOL;
         echo $order->getUser()->getEmail() . PHP_EOL;
@@ -417,12 +283,14 @@ if ($response->hasErrors()) {
             echo $order->getSender()->getAccessPoint()->getDescription() . PHP_EOL;
             echo $order->getSender()->getAccessPoint()->getOpenHours() . PHP_EOL;
         }
-        foreach ($order->getAdditionalFields()->getAll() as $additionalField) {
-            echo
-                '"' . $additionalField->getName() . '";' .
-                '"' . $additionalField->getTitle() . '";' .
-                '"' . $additionalField->getValue() . '";' .
-                PHP_EOL;
+        if (!is_null($order->getOrderReturn())) {
+            foreach ($order->getOrderReturn()->getAdditionalFields()->getAll() as $additionalField) {
+                echo
+                    '"' . $additionalField->getName() . '";' .
+                    '"' . $additionalField->getTitle() . '";' .
+                    '"' . $additionalField->getValue() . '";' .
+                    PHP_EOL;
+            }
         }
     }
 }
@@ -436,7 +304,7 @@ gdzie:
 
 ```bash
 curl -X GET \
-  https://api.allekurier.pl/v1/KOD_KLIENTA/order/sent?date=DATA \
+  https://api.allekurier.pl/order/sent?date=DATA \
   -H 'accept: application/json' \
   -H 'cache-control: no-cache' \
   -H 'content-type: application/json' \
@@ -445,111 +313,5 @@ curl -X GET \
 
 gdzie:
 
-* `KOD_KLIENTA`: Kod autoryzacyjny klienta.
 * `TOKEN_AUTORYZACYJNY`: Token autoryzacyjny.
 * `DATA`: Data w formacie Y-m-d wg, której pobierana jest lista przesyłek. Gdy null- dzisiejsza data.
-
-#### Pobranie danych przesyłki po indentyfikatorze zamówienia
-
-##### Zapytanie
-
-https://api.allekurier.pl/v1/KOD_KLIENTA/order/IDENTYFIKATOR_ZAMÓWIENIA
-
-gdzie:
-
-* `KOD_KLIENTA`: Kod autoryzacyjny klienta.
-* `IDENTYFIKATOR_ZAMÓWIENIA`: Identyfikator zamówienia w formacie UUID.
-
-##### Odpowiedź
-
-[Zobacz](#pobranie-danych-przesyłki)
-
-##### Przykłady
-
-###### PHP
-
-```php
-$request = new AlleKurier\ApiV2\Command\GetOrderByHid\GetOrderByHidRequest(
-    'IDENTYFIKATOR_ZAMÓWIENIA'
-);
-
-/** @var \AlleKurier\ApiV2\Command\GetOrderByHid\GetOrderByHidResponse|\AlleKurier\ApiV2\Lib\Errors\ErrorsInterface $response */
-$response = $api->call($request);
-
-if ($response->hasErrors()) {
-    foreach ($response->getErrors() as $error) {
-        echo $error->getMessage() . PHP_EOL;
-        echo $error->getCode() . PHP_EOL;
-        echo $error->getLevel() . PHP_EOL;
-    }
-} else {
-    echo $response->getOrder()->getNumber() . PHP_EOL;
-    echo $response->getOrder()->getHid() . PHP_EOL;
-    echo $response->getOrder()->getStatus() . PHP_EOL;
-    echo $response->getOrder()->getUser()->getEmail() . PHP_EOL;
-    echo $response->getOrder()->getSender()->getName() . PHP_EOL;
-    echo $response->getOrder()->getSender()->getCompany() . PHP_EOL;
-    echo $response->getOrder()->getSender()->getAddress() . PHP_EOL;
-    echo $response->getOrder()->getSender()->getPostalCode() . PHP_EOL;
-    echo $response->getOrder()->getSender()->getCity() . PHP_EOL;
-    echo $response->getOrder()->getSender()->getCountry()->getCode() . PHP_EOL;
-    echo $response->getOrder()->getSender()->getCountry()->getName() . PHP_EOL;
-    echo $response->getOrder()->getSender()->getState() . PHP_EOL;
-    echo $response->getOrder()->getSender()->getPhone() . PHP_EOL;
-    echo $response->getOrder()->getSender()->getEmail() . PHP_EOL;
-    if (!empty($response->getOrder()->getSender()->getAccessPoint())) {
-        echo $response->getOrder()->getSender()->getAccessPoint()->getCode() . PHP_EOL;
-        echo $response->getOrder()->getSender()->getAccessPoint()->getName() . PHP_EOL;
-        echo $response->getOrder()->getSender()->getAccessPoint()->getAddress() . PHP_EOL;
-        echo $response->getOrder()->getSender()->getAccessPoint()->getPostalCode() . PHP_EOL;
-        echo $response->getOrder()->getSender()->getAccessPoint()->getCity() . PHP_EOL;
-        echo $response->getOrder()->getSender()->getAccessPoint()->getDescription() . PHP_EOL;
-        echo $response->getOrder()->getSender()->getAccessPoint()->getOpenHours() . PHP_EOL;
-    }
-    foreach ($response->getOrder()->getAdditionalFields()->getAll() as $additionalField) {
-        echo
-            '"' . $additionalField->getName() . '";' .
-            '"' . $additionalField->getTitle() . '";' .
-            '"' . $additionalField->getValue() . '";' .
-            PHP_EOL;
-    }
-}
-```
-
-gdzie:
-
-* `IDENTYFIKATOR_ZAMÓWIENIA`: Identyfikator zamówienia w formacie UUID.
-
-###### cURL
-
-```bash
-curl -X GET \
-  https://api.allekurier.pl/v1/KOD_KLIENTA/order/IDENTYFIKATOR_ZAMÓWIENIA \
-  -H 'accept: application/json' \
-  -H 'cache-control: no-cache' \
-  -H 'content-type: application/json' \
-  -H 'authorization: TOKEN_AUTORYZACYJNY'
-```
-
-gdzie:
-
-* `KOD_KLIENTA`: Kod autoryzacyjny klienta.
-* `TOKEN_AUTORYZACYJNY`: Token autoryzacyjny.
-* `IDENTYFIKATOR_ZAMÓWIENIA`: Identyfikator zamówienia w formacie UUID.
-
-###### cURL
-
-```bash
-curl -X GET \
-  https://api.allekurier.pl/v1/KOD_KLIENTA/order/IDENTYFIKATOR_ZAMÓWIENIA/labels \
-  -H 'accept: application/json' \
-  -H 'cache-control: no-cache' \
-  -H 'content-type: application/json' \
-  -H 'authorization: TOKEN_AUTORYZACYJNY'
-```
-
-gdzie:
-
-* `KOD_KLIENTA`: Kod autoryzacyjny klienta.
-* `TOKEN_AUTORYZACYJNY`: Token autoryzacyjny.
-* `IDENTYFIKATOR_ZAMÓWIENIA`: Identyfikator zamówienia w formacie UUID.

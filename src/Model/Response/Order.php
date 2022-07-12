@@ -21,7 +21,7 @@ class Order implements ResponseModelInterface
 
     private string $status;
 
-    private AdditionalFields $additionalFields;
+    private ?OrderReturn $orderReturn;
 
     /**
      * Konstruktor
@@ -30,21 +30,21 @@ class Order implements ResponseModelInterface
      * @param User $user
      * @param Identity $sender
      * @param string $status
-     * @param AdditionalFields $additionalFields
+     * @param OrderReturn|null $orderReturn
      */
     private function __construct(
-        string           $hid,
-        User             $user,
-        Identity         $sender,
-        string           $status,
-        AdditionalFields $additionalFields
+        string   $hid,
+        User     $user,
+        Identity $sender,
+        string   $status,
+        ?OrderReturn $orderReturn
     )
     {
         $this->hid = $hid;
         $this->user = $user;
         $this->sender = $sender;
         $this->status = $status;
-        $this->additionalFields = $additionalFields;
+        $this->orderReturn = $orderReturn;
     }
 
     /**
@@ -56,16 +56,16 @@ class Order implements ResponseModelInterface
         $user = User::createFromArray($data['user']);
         $sender = Identity::createFromArray($data['sender']);
         $status = $data['status'];
-        $additionalFields = AdditionalFields::createFromArray(!empty($data['additional_fields'])
-            ? $data['additional_fields']
-            : []);
+        $orderReturn = !empty($data['return'])
+            ? OrderReturn::createFromArray($data['return'])
+            : null;
 
         return new self(
             $hid,
             $user,
             $sender,
             $status,
-            $additionalFields
+            $orderReturn
         );
     }
 
@@ -77,20 +77,6 @@ class Order implements ResponseModelInterface
     public function getHid(): string
     {
         return $this->hid;
-    }
-
-    /**
-     * Pobranie numeru zamówienia jeżeli istnieje
-     *
-     * @return string|null
-     */
-    public function getNumber(): ?string
-    {
-        $orderNumber = $this->additionalFields->findByName('orderNumber');
-
-        return !is_null($orderNumber)
-            ? $orderNumber->getValue()
-            : null;
     }
 
     /**
@@ -124,12 +110,12 @@ class Order implements ResponseModelInterface
     }
 
     /**
-     * Pobranie dodatkowych pól opisujących przesyłkę
+     * Pobranie danych przesyłki zwrotnej
      *
-     * @return AdditionalFields
+     * @return OrderReturn|null
      */
-    public function getAdditionalFields(): AdditionalFields
+    public function getOrderReturn(): ?OrderReturn
     {
-        return $this->additionalFields;
+        return $this->orderReturn;
     }
 }
