@@ -1,4 +1,4 @@
-# Biblioteka kliencka API dla AlleKuriera
+# Biblioteka kliencka API dla AlleKuriera i Wygodnych Zwrotów
 
 [![Autor](http://img.shields.io/badge/author-allekurier.pl-blue.svg?style=flat-square)](https://allekurier.pl)
 [![Licencja](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](https://github.com/AlleKurier/api_v2/blob/master/LICENSE.md)
