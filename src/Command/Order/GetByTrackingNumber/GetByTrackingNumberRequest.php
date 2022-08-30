@@ -52,7 +52,7 @@ class GetByTrackingNumberRequest extends AbstractRequest implements RequestInter
      */
     public function getEndpoint(): string
     {
-        return sprintf('order/trackingnumber/%s', $this->trackingNumber);
+        return sprintf('order/tracking-number/%s', $this->trackingNumber);
     }
 
     /**
